@@ -1,5 +1,5 @@
 const PORT = process.env.REQ_PORT || 3333;
-const BASE_URL = process.env.BASE_URL || "http://backend:";
+const BASE_URL = process.env.BASE_URL || "http://backend-redis:";
 
 const fetchCounter = async (url, method = "GET") => {
 	try {
