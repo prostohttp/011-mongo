@@ -4,7 +4,6 @@
 <form method="post" enctype="multipart/form-data">
 	<label for="title" class="block mb-[2px] font-bold">Название</label>
 	<input
-		required
 		type="text"
 		name="title"
 		id="title"
@@ -13,17 +12,14 @@
 	/>
 	<label for="description" class="block mb-[2px] font-bold">Описание</label>
 	<textarea
-		required
 		name="description"
 		id="description"
 		class="border-[1px] rounded-[4px] h-[150px] py-[10px] px-[20px] w-[400px] border-[#ccc]"
-	>
-  <%= book.description %>
+	><%= book.description %>
 </textarea
 	>
 	<label for="authors" class="block mb-[2px] mt-[20px] font-bold">Авторы</label>
 	<input
-		required
 		type="text"
 		name="authors"
 		id="authors"
@@ -33,17 +29,17 @@
 	<label for="favorite" class="block mb-[2px] mt-[20px] font-bold"
 		>В избранном</label
 	>
-	<input type="checkbox" name="favorite" id="favorite" <%=
-	book.favorite ? "checked" : "" %> class="border-[1px] rounded-[4px] h-[40px]
-	px-[20px] w-[20px] border-[#ccc] mb-[20px]" />
+	<input type="checkbox" name="favorite" id="favorite" <%= book.favorite === "on" ?
+	"checked" : "" %> class="border-[1px] rounded-[4px] h-[40px] px-[20px]
+	w-[20px] border-[#ccc] mb-[20px]" />
 	<label for="filecover" class="block mb-[10px] font-bold"
 		>Загрузить новый постер книги</label
 	>
-	<input required type="file" name="filecover" id="filecover" />
+	<input type="file" name="filecover" id="filecover" />
 	<label for="filebook" class="block mt-[20px] mb-[10px] font-bold"
 		>Загрузить новый файл книги</label
 	>
-	<input required type="file" name="filebook" id="filebook" />
+	<input type="file" name="filebook" id="filebook" />
 	<button
 		class="py-[10px] px-[20px] bg-[red] text-white uppercase rounded-[5px] hover:bg-[black] mt-[20px] flex"
 	>

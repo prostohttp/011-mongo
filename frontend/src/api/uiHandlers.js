@@ -1,47 +1,51 @@
-const bookStore = require("../store/books");
-const Book = require("../book");
-const counter = require("../api/counterApi");
+const api = require("../api/fetch");
+const { v4: uuid } = require("uuid");
 
-const indexHandler = (req, res) => {
-	const { books } = bookStore;
+const PORT = process.env.REQ_PORT || 3333;
+const BASE_URL = process.env.BASE_URL || "http://backend-redis";
+const DB_PORT = process.env.DB_PORT || 3334;
+const DB_URL = process.env.DB_URL || "http://backend-mongo";
+
+const indexHandler = async (_, res) => {
+	const books = await api.fetch(`${DB_URL}:${DB_PORT}/api/books`);
 	res.render("books/index", { books: books });
 };
 
 const createHandler = (req, res) => {
-	res.render("books/create", { books: bookStore });
+	res.render("books/create");
 };
 
-const addBookHandler = (req, res) => {
-	const { books } = bookStore;
+const addBookHandler = async (req, res) => {
+	const id = uuid();
+
 	const { title, description, authors, favorite } = req.body;
-	if (req.files) {
-		const { path: pathFileCover, originalname: originalNameFileCover } =
-			req.files["filecover"][0];
-		const { path: pathFileBook, originalname: originalNameFileBook } =
-			req.files["filebook"][0];
+	const fcover = req.files["filecover"] ? req.files["filecover"][0] : undefined;
+	const fbook = req.files["filebook"] ? req.files["filebook"][0] : undefined;
 
-		const newBook = new Book(
-			title,
-			description,
-			authors,
-			favorite,
-			"/" + pathFileCover,
-			req.body.fileName,
-			"/" + pathFileBook,
-			originalNameFileCover,
-			originalNameFileBook
-		);
+	const data = {
+		id,
+		title,
+		description,
+		authors,
+		favorite,
+		filecover: fcover ? "/" + fcover.path : "/public/no-image.jpeg",
+		filebook: fbook ? "/" + fbook.path : "/public/no-image.jpeg",
+		originalNameFileCover: fcover
+			? fcover.originalNameFileCover
+			: "/public/no-image.jpeg",
+		originalNameFileBook: fbook
+			? fbook.originalNameFileBook
+			: "/public/no-image.jpeg",
+	};
 
-		books.unshift(newBook);
-		res.status(201);
-		res.redirect("/");
-	}
+	await api.fetch(`${DB_URL}:${DB_PORT}/api/books`, "POST", data);
+	res.status(201);
+	res.redirect("/");
 };
 
-const editHandler = (req, res) => {
-	const { books } = bookStore;
+const editHandler = async (req, res) => {
 	const { id } = req.params;
-	const book = books.find((book) => book.id === id);
+	const book = await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`);
 	if (book) {
 		res.render("books/update", { book: book });
 	} else {
@@ -50,27 +54,27 @@ const editHandler = (req, res) => {
 	}
 };
 
-const updateHandler = (req, res) => {
-	const { books } = bookStore;
-	const { title, description, authors, favorite, fileName } = req.body;
-	const fileCover = req.files["filecover"][0];
-	const fileBook = req.files["filebook"][0];
+const updateHandler = async (req, res) => {
 	const { id } = req.params;
-	const index = books.findIndex((book) => book.id === id);
+	const book = await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`);
+	const { title, description, authors, favorite, filecover, filebook } =
+		req.body;
+	let data;
+	const fcover = req.files["filecover"] ? req.files["filecover"][0] : undefined;
+	const fbook = req.files["filebook"] ? req.files["filebook"][0] : undefined;
 
-	if (index !== -1) {
-		books[index] = {
-			...books[index],
-			title,
-			description,
-			authors,
-			favorite,
-			filecover: "/" + fileCover.path,
-			fileName,
-			filebook: "/" + fileBook.path,
-			originalNameFileCover: fileCover.originalname,
-			originalNameFileBook: fileBook.originalname,
-		};
+	data = {
+		...book,
+		title,
+		description,
+		authors,
+		favorite,
+		filecover: fcover ? "/" + fcover.path : filecover,
+		filebook: fbook ? "/" + fbook.path : filebook,
+	};
+
+	if (book._id === id) {
+		await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`, "PUT", data);
 		res.status(204);
 		res.redirect(`/books/${id}/update`);
 	} else {
@@ -80,12 +84,14 @@ const updateHandler = (req, res) => {
 };
 
 const viewHandler = async (req, res) => {
-	const { books } = bookStore;
 	const { id } = req.params;
-	const index = books.findIndex((book) => book.id === id);
-	if (index !== -1) {
-		const response = await counter.fetch(`/counter/${id}/incr`, "POST");
-		res.render("books/view", { book: books[index], count: response.counter });
+	const book = await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`);
+	if (book._id === id) {
+		const response = await api.fetch(
+			`${BASE_URL}:${PORT}/counter/${id}/incr`,
+			"POST"
+		);
+		res.render("books/view", { book, count: response.counter });
 	} else {
 		res.status(404);
 		res.render("notFound");
@@ -93,12 +99,11 @@ const viewHandler = async (req, res) => {
 };
 
 const deleteHandler = async (req, res) => {
-	const { books } = bookStore;
 	const { id } = req.params;
-	const index = books.findIndex((book) => book.id === id);
-	if (index !== -1) {
-		await counter.fetch(`/counter/${id}/del`, "POST");
-		books.splice(index, 1);
+	const book = await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`);
+	if (book._id === id) {
+		await api.fetch(`${BASE_URL}:${PORT}/counter/${id}/del`, "POST");
+		await api.fetch(`${DB_URL}:${DB_PORT}/api/books/${id}`, "DELETE");
 		res.redirect("/");
 	} else {
 		res.status(404);

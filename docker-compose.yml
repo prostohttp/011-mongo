@@ -10,7 +10,9 @@ services:
       CHOKIDAR_USEPOLLING: true
       PORT: "3000"
       REQ_PORT: "3333"
-      REDIS_URL: redis://redis
+      DB_PORT: "3334"
+      BASE_URL: http://backend-redis
+      DB_URL: http://backend-mongo
     depends_on:
       - redis
       - backend-mongo

@@ -1,11 +1,16 @@
 const express = require("express");
-const book = require("../api/apiBooksHandlers");
+const apiBooks = require("../api/booksHandlers");
 
-const router = express.Router();
-router.get("/", book.getAll)
-router.get("/:id", book.get);
-router.post("/", book.add);
-router.put("/:id", book.update);
-router.delete("/:id", book.delete);
+const apiBooksRouter = express.Router();
 
-module.exports = router
+apiBooksRouter.get("/:id", apiBooks.get);
+
+apiBooksRouter.get("/", apiBooks.getAll);
+
+apiBooksRouter.post("/", apiBooks.add);
+
+apiBooksRouter.put("/:id", apiBooks.update);
+
+apiBooksRouter.delete("/:id", apiBooks.delete);
+
+module.exports = apiBooksRouter;
