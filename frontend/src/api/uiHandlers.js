@@ -26,7 +26,7 @@ const addBookHandler = async (req, res) => {
     title,
     description,
     authors,
-    favorite,
+    favorite: false,
     fileName: title,
     filecover: fcover ? `/${fcover.path}` : `/public/no-image.jpeg`,
     filebook: fbook ? `/${fbook.path}` : `/public/no-image.jpeg`,
@@ -37,8 +37,6 @@ const addBookHandler = async (req, res) => {
       ? fbook.originalname
       : `/public/no-image.jpeg`,
   };
-  console.log(data.originalNameFileBook)
-  console.log(data.originalNameFileCover)
   await api.fetch(`${DB_URL}:${DB_PORT}/api/books`, "POST", data);
   res.status(201);
   res.redirect("/");
