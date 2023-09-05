@@ -5,6 +5,7 @@ const app = express();
 const booksRouter = require("./routes/apiBookRouter");
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/books", booksRouter);
 
 const start = async (port, url) => {
